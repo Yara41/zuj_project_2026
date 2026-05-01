@@ -1,5 +1,69 @@
 import { useState, useEffect, useRef } from "react";
 
+// تنظيف النص من الرموز الزيادة
+function cleanResponse(text) {
+  if (!text) return "";
+  
+  // شيل "output": من البداية
+  text = text.replace(/^\s*\{\s*"output"\s*:\s*"/, "");
+  text = text.replace(/"\s*\}\s*$/, "");
+  text = text.replace(/^"output"\s*:\s*"/, "");
+  
+  // شيل أقواس JSON الخارجية
+  text = text.replace(/^\s*\{/, "").replace(/\}\s*$/, "");
+  
+  // شيل علامات Markdown
+  text = text.replace(/\*\*(.*?)\*\*/g, "$1");
+  text = text.replace(/##\s*/g, "");
+  text = text.replace(/\*\s/g, "• ");
+  
+  // شيل escape characters
+  text = text.replace(/\\n/g, "\n");
+  text = text.replace(/\\"/g, '"');
+  text = text.replace(/\\/g, "");
+  
+  return text.trim();
+}
+
+// تحويل النص لمكونات مرئية
+function FormattedMessage({ text }) {
+  const cleaned = cleanResponse(text);
+  const lines = cleaned.split("\n").filter(line => line.trim() !== "");
+  
+  return (
+    <div className="space-y-1.5 text-right leading-relaxed">
+      {lines.map((line, i) => {
+        const trimmed = line.trim();
+        
+        // عنوان رئيسي
+        if (trimmed.endsWith(":") && trimmed.length < 50) {
+          return (
+            <p key={i} className="font-bold text-[#1e5631] mt-3 first:mt-0">
+              {trimmed}
+            </p>
+          );
+        }
+        
+        // نقطة أو رقم
+        if (/^[•\-\d]/.test(trimmed)) {
+          return (
+            <p key={i} className="pr-3 text-slate-700">
+              {trimmed}
+            </p>
+          );
+        }
+        
+        // نص عادي
+        return (
+          <p key={i} className="text-slate-700">
+            {trimmed}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function App() {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
@@ -36,7 +100,7 @@ export default function App() {
 
       const data = await res.json();
 
-      const reply =
+      let reply =
         typeof data === "string"
           ? data
           : data.output ||
@@ -61,7 +125,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-[#f8faf8] font-['Cairo']">
-      {/* 1. SIDEBAR */}
+      {/* SIDEBAR */}
       <aside
         className={`
         fixed inset-y-0 right-0 z-50 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out border-r border-slate-100
@@ -150,10 +214,8 @@ export default function App() {
           </button>
         </header>
 
-        {/* الرسائل والترحيب */}
         <div className="flex-1 overflow-y-auto p-4 md:p-10">
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* عرض شاشة الترحيب والبطاقات في حال عدم وجود رسائل */}
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center animate-fadeIn">
                 <div className="max-w-2xl w-full bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-slate-100/80">
@@ -164,54 +226,29 @@ export default function App() {
                     أهلاً بك في المساعد الأكاديمي لجامعة الزيتونة
                   </h2>
                   <p className="text-slate-500 text-sm max-w-md mx-auto mb-8 leading-relaxed">
-                    أنا المساعد الذكي، مستعد للإجابة على جميع استفساراتك الأكاديمية والإرشادية. تفضل بطرح سؤالك!
+                    أنا المساعد الذكي، مستعد للإجابة على جميع استفساراتك الأكاديمية والإرشادية.
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right max-w-xl mx-auto">
-                    <button
-                      onClick={() => sendMessage("كيف تتم عملية الإرشاد الأكاديمي؟")}
-                      className="group p-4 bg-slate-50 hover:bg-[#1e5631]/5 border border-slate-100 rounded-2xl transition-all text-right flex items-center justify-between shadow-sm cursor-pointer"
-                    >
-                      <span className="text-sm font-bold text-slate-700 group-hover:text-[#1e5631]">
-                        كيف تتم عملية الإرشاد الأكاديمي؟
-                      </span>
-                      <span className="text-[#1e5631] opacity-0 group-hover:opacity-100 transition-all">
-                        ➔
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => sendMessage("ما هي شروط التسجيل في الجامعة؟")}
-                      className="group p-4 bg-slate-50 hover:bg-[#1e5631]/5 border border-slate-100 rounded-2xl transition-all text-right flex items-center justify-between shadow-sm cursor-pointer"
-                    >
-                      <span className="text-sm font-bold text-slate-700 group-hover:text-[#1e5631]">
-                        ما هي شروط التسجيل؟
-                      </span>
-                      <span className="text-[#1e5631] opacity-0 group-hover:opacity-100 transition-all">
-                        ➔
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => sendMessage("مواعيد الامتحانات")}
-                      className="group p-4 bg-slate-50 hover:bg-[#1e5631]/5 border border-slate-100 rounded-2xl transition-all text-right flex items-center justify-between shadow-sm cursor-pointer"
-                    >
-                      <span className="text-sm font-bold text-slate-700 group-hover:text-[#1e5631]">
-                        مواعيد الامتحانات
-                      </span>
-                      <span className="text-[#1e5631] opacity-0 group-hover:opacity-100 transition-all">
-                        ➔
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => sendMessage("الخطة الدراسية")}
-                      className="group p-4 bg-slate-50 hover:bg-[#1e5631]/5 border border-slate-100 rounded-2xl transition-all text-right flex items-center justify-between shadow-sm cursor-pointer"
-                    >
-                      <span className="text-sm font-bold text-slate-700 group-hover:text-[#1e5631]">
-                        الخطة الدراسية
-                      </span>
-                      <span className="text-[#1e5631] opacity-0 group-hover:opacity-100 transition-all">
-                        ➔
-                      </span>
-                    </button>
+                    {[
+                      "كيف تتم عملية الإرشاد الأكاديمي؟",
+                      "ما هي شروط تسجيل مشروع التخرج؟",
+                      "كم الحد الأعلى للساعات في الفصل؟",
+                      "الخطة الدراسية لذكاء الأعمال",
+                    ].map((q, i) => (
+                      <button
+                        key={i}
+                        onClick={() => sendMessage(q)}
+                        className="group p-4 bg-slate-50 hover:bg-[#1e5631]/5 border border-slate-100 rounded-2xl transition-all text-right flex items-center justify-between shadow-sm cursor-pointer"
+                      >
+                        <span className="text-sm font-bold text-slate-700 group-hover:text-[#1e5631]">
+                          {q}
+                        </span>
+                        <span className="text-[#1e5631] opacity-0 group-hover:opacity-100 transition-all">
+                          ➔
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -226,21 +263,26 @@ export default function App() {
                   <div
                     className={`p-4 rounded-3xl max-w-xl shadow-sm ${
                       msg.role === "user"
-                        ? "bg-[#1e5631] text-white"
+                        ? "bg-[#1e5631] text-white text-right"
                         : "bg-white border text-slate-800"
                     }`}
                   >
-                    {msg.text}
+                    {msg.role === "bot" ? (
+                      <FormattedMessage text={msg.text} />
+                    ) : (
+                      msg.text
+                    )}
                   </div>
                 </div>
               ))
             )}
 
-            {/* حالة الانتظار */}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white border text-slate-500 p-4 rounded-3xl shadow-sm">
-                  جاري المعالجة...
+                <div className="bg-white border text-slate-500 p-4 rounded-3xl shadow-sm flex items-center gap-2">
+                  <span className="animate-pulse">●</span>
+                  <span className="animate-pulse delay-100">●</span>
+                  <span className="animate-pulse delay-200">●</span>
                 </div>
               </div>
             )}
@@ -248,7 +290,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* 3. الإدخال */}
         <footer className="p-4 bg-white border-t border-slate-100">
           <form
             onSubmit={(e) => {
@@ -258,7 +299,7 @@ export default function App() {
             className="max-w-4xl mx-auto flex gap-2"
           >
             <input
-              className="flex-1 p-4 rounded-2xl border border-slate-200 focus:outline-none focus:border-[#1e5631] transition-all"
+              className="flex-1 p-4 rounded-2xl border border-slate-200 focus:outline-none focus:border-[#1e5631] transition-all text-right"
               placeholder="اكتبي سؤالك هنا..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
