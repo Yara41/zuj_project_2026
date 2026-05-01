@@ -4,7 +4,9 @@ const messagesContent = document.getElementById('messagesContent');
 const chatForm = document.getElementById('chatForm');
 const userInput = document.getElementById('userInput');
 
-const webhookUrl = 'http://13.61.19.235:5678/webhook/403c03b2-ca17-4b9f-9d52-ced767db5b3b';
+// ✅ التعديل هون
+const webhookUrl = '/.netlify/functions/chat';
+
 const sessionId = "user1";
 
 // إضافة رسالة
@@ -58,24 +60,20 @@ function scrollToBottom() {
     });
 }
 
-// 🔥 أهم تعديل هنا
+// استخراج الرد
 function extractReply(data) {
     try {
         if (!data) return "لم يتم العثور على رد.";
 
-        // إذا الرد string مباشر
         if (typeof data === 'string') return data;
 
-        // إذا جاي من n8n بشكل منظم
         if (data.output) return data.output;
 
-        // إذا جاي array
         if (Array.isArray(data)) {
             if (data[0]?.output) return data[0].output;
             if (data[0]?.text) return data[0].text;
         }
 
-        // fallback
         return JSON.stringify(data);
     } catch {
         return "حدث خطأ في قراءة الرد.";
@@ -89,8 +87,7 @@ async function sendMessageToWebhook(message) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                chatInput: message,
-                sessionId: sessionId
+                question: message   // ✅ مهم جدًا يتطابق مع chat.js
             })
         });
 
