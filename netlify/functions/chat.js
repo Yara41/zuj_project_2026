@@ -3,17 +3,13 @@ export async function handler(event) {
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-      },
+      headers: corsHeaders(),
       body: "",
     };
   }
 
   try {
-    // 🔹 التحقق من وجود body
+    // 🔹 التحقق من body
     if (!event.body) {
       return {
         statusCode: 400,
@@ -28,21 +24,20 @@ export async function handler(event) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
-    // 🔹 إرسال الطلب لـ n8n
-    const response = await fetch(
-      "http://13.61.19.235:5678/webhook/b7ed42af-3773-4af7-a9d3-704e062369c8",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chatInput: body.question,
-          sessionId: body.sessionId || "user1",
-        }),
-        signal: controller.signal,
-      }
-    );
+    // 🔥 رابط n8n (خليه زي ما هو إذا شغال)
+    const N8N_URL = "http://13.61.19.235:5678/webhook/b7ed42af-3773-4af7-a9d3-704e062369c8";
+
+    const response = await fetch(N8N_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chatInput: body.question,
+        sessionId: body.sessionId || "user1",
+      }),
+      signal: controller.signal,
+    });
 
     clearTimeout(timeout);
 
@@ -60,12 +55,13 @@ export async function handler(event) {
       data = { output: text };
     }
 
-    // 🔥 توحيد الرد (مهم جدًا)
+    // 🔥 توحيد الرد (أقوى نسخة)
     let finalOutput =
       data.output ||
       data.response ||
       data.answer ||
-      (Array.isArray(data) && data[0]?.output) ||
+      data.text ||
+      (Array.isArray(data) && (data[0]?.output || data[0]?.text)) ||
       text;
 
     return {
@@ -88,7 +84,7 @@ export async function handler(event) {
   }
 }
 
-// 🔹 CORS helper
+// 🔹 CORS headers
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
