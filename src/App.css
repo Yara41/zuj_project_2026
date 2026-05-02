@@ -1,44 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 
 body {
   margin: 0;
   font-family: 'Cairo', sans-serif;
-  overflow: hidden;
+  background-color: #F4F7F5;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* انيميشن لظهور المحتوى بسلاسة */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-/* تحسين شكل السكرول بار */
+/* تحسين السكرول بار ليناسب كلية الأعمال */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #1e5631;
+  background: #cbd5e1;
   border-radius: 10px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #163d25;
+  background: #1e5631;
 }
 
-/* تأثيرات الظلال للأزرار */
-button {
-  transition: all 0.2s ease;
+/* انيميشن لدخول الرسائل */
+.message-enter {
+  animation: slideUp 0.3s ease-out;
 }
 
-button:active {
-  transform: scale(0.98);
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
