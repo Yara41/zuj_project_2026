@@ -16,12 +16,12 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5.1.1",
     "@tailwindcss/postcss": "^4.2.2",
     "@tailwindcss/vite": "^4.2.2",
-    "tailwindcss": "^4.2.1",
-    "postcss": "^8.5.8",
+    "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
     "vite": "^7.3.1"
   }
 }
