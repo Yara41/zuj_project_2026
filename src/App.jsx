@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Trash2, Send, Plus, MessageSquare, ExternalLink, Globe, GraduationCap, ClipboardList, Bot, Layout } from "lucide-react";
+import { Trash2, Send, Plus, MessageSquare, ExternalLink, Globe, GraduationCap, ClipboardList, Bot, Layout, BookOpen, Layers, Repeat } from "lucide-react";
 
 export default function App() {
   const [chats, setChats] = useState(() => {
@@ -19,45 +19,15 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chats]);
 
-  const formatResponse = (text) => {
-    try {
-      const parsed = JSON.parse(text);
-      return parsed.output || text;
-    } catch (e) { return text; }
-  };
-
-  const createNewChat = () => {
-    const newChat = { id: Date.now(), title: "محادثة جديدة", messages: [] };
-    setChats([newChat, ...chats]);
-    setActiveChatId(newChat.id);
-  };
-
-  const deleteChat = (id, e) => {
-    e.stopPropagation();
-    const filtered = chats.filter(c => c.id !== id);
-    if (filtered.length === 0) {
-      const reset = [{ id: Date.now(), title: "محادثة جديدة", messages: [] }];
-      setChats(reset);
-      setActiveChatId(reset[0].id);
-    } else {
-      setChats(filtered);
-      if (activeChatId === id) setActiveChatId(filtered[0].id);
-    }
-  };
-
   const sendMessage = async (text) => {
     if (!text.trim()) return;
     const newMessage = { role: "user", text };
-    const updatedChats = chats.map(chat => {
-      if (chat.id === activeChatId) {
-        const newTitle = chat.messages.length === 0 ? text.substring(0, 25) : chat.title;
-        return { ...chat, title: newTitle, messages: [...chat.messages, newMessage] };
-      }
-      return chat;
-    });
-    setChats(updatedChats);
+    setChats(prev => prev.map(chat => 
+      chat.id === activeChatId ? { ...chat, title: chat.messages.length === 0 ? text.substring(0, 25) : chat.title, messages: [...chat.messages, newMessage] } : chat
+    ));
     setInputValue("");
     setLoading(true);
+
     try {
       const res = await fetch("/.netlify/functions/chat", {
         method: "POST",
@@ -66,119 +36,117 @@ export default function App() {
       });
       const data = await res.json();
       setChats(prev => prev.map(chat => 
-        chat.id === activeChatId ? { ...chat, messages: [...chat.messages, { role: "bot", text: data.output || "نعتذر، لم نتمكن من جلب الرد حالياً." }] } : chat
+        chat.id === activeChatId ? { ...chat, messages: [...chat.messages, { role: "bot", text: data.output || "نعتذر، لم نتمكن من جلب الرد." }] } : chat
       ));
     } catch (err) { console.error(err); }
     setLoading(false);
   };
 
   return (
-    <div className="flex h-screen bg-[#F4F7F5] font-['Cairo'] text-right" dir="rtl">
+    <div className="flex h-screen bg-[#F8FAFC] font-['Cairo'] text-right" dir="rtl">
       {/* SIDEBAR */}
-      <aside className="w-85 bg-white border-l border-gray-100 flex flex-col shadow-xl hidden md:flex">
-        <div className="p-8 flex flex-col items-center border-b border-gray-50">
-          <div className="flex gap-6 mb-4">
-            <img src="/OIP (1).webp" alt="ZUJ Logo" className="w-24 h-24 object-contain" />
-            <img src="/OIP (2).webp" alt="Faculty Logo" className="w-24 h-24 object-contain" />
+      <aside className="w-80 bg-white border-l border-gray-200 flex flex-col shadow-sm hidden md:flex">
+        <div className="p-6 flex flex-col items-center border-b border-gray-50">
+          <div className="flex gap-4 mb-3">
+             <img src="/OIP (1).webp" alt="ZUJ" className="h-16 w-auto" />
+             <img src="/OIP (2).webp" alt="Faculty" className="h-16 w-auto" />
           </div>
-          <h2 className="font-black text-[#1e5631] text-lg">جامعة الزيتونة الأردنية</h2>
-          <p className="text-[9px] text-gray-400 font-bold tracking-[0.2em] uppercase">" عراقة وجـودة "</p>
+          <h2 className="font-black text-[#1e5631] text-md">جامعة الزيتونة الأردنية</h2>
+          <p className="text-[10px] text-gray-400 font-bold tracking-widest mt-1">QUALITY AND TRADITION</p>
         </div>
 
-        <div className="p-4 flex-1 overflow-y-auto space-y-2">
-          <button onClick={createNewChat} className="w-full flex items-center justify-center gap-2 bg-[#1e5631] text-white p-4 rounded-xl font-bold hover:bg-[#163d25] transition-all mb-4 shadow-md">
-            <Plus size={20} /> محادثة جديدة
+        <div className="p-4 flex-1 overflow-y-auto space-y-1">
+          <button onClick={() => { const n = { id: Date.now(), title: "محادثة جديدة", messages: [] }; setChats([n, ...chats]); setActiveChatId(n.id); }} 
+            className="w-full flex items-center justify-center gap-2 bg-[#1e5631] text-white p-3 rounded-xl font-bold hover:bg-[#163d25] transition-all mb-4">
+            <Plus size={18} /> محادثة جديدة
           </button>
-          <p className="text-[11px] font-black text-gray-400 px-2 mb-2">سجل الإرشاد</p>
+          
           {chats.map(chat => (
-            <div key={chat.id} onClick={() => setActiveChatId(chat.id)} className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${activeChatId === chat.id ? "bg-green-50 border border-green-100" : "hover:bg-gray-50"}`}>
-              <div className="flex items-center gap-3 overflow-hidden">
-                <MessageSquare size={18} className={activeChatId === chat.id ? "text-[#1e5631]" : "text-gray-400"} />
-                <span className={`text-sm truncate ${activeChatId === chat.id ? "text-[#1e5631] font-bold" : "text-gray-600"}`}>{chat.title}</span>
+            <div key={chat.id} onClick={() => setActiveChatId(chat.id)} 
+              className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${activeChatId === chat.id ? "bg-green-50 text-[#1e5631]" : "hover:bg-gray-50 text-gray-600"}`}>
+              <div className="flex items-center gap-3 truncate">
+                <MessageSquare size={16} className={activeChatId === chat.id ? "text-[#1e5631]" : "text-gray-400"} />
+                <span className="text-sm font-bold truncate">{chat.title}</span>
               </div>
-              <Trash2 size={15} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => deleteChat(chat.id, e)} />
+              <Trash2 size={14} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100" onClick={(e) => { e.stopPropagation(); setChats(chats.filter(c => c.id !== chat.id)); }} />
             </div>
           ))}
         </div>
 
-        {/* بوابة الخدمات - الروابط الثلاثة المرجعة */}
         <div className="p-4 border-t border-gray-100 bg-gray-50/50 space-y-2">
-          <p className="text-[10px] font-black text-gray-400 px-2 uppercase mb-2">بوابة الخدمات الطلابية</p>
-          <a href="https://www.zuj.edu.jo/" target="_blank" rel="noreferrer" className="flex items-center justify-between p-2.5 bg-white rounded-lg text-xs font-bold text-gray-600 hover:text-[#1e5631] shadow-sm transition-all group">
-            <div className="flex items-center gap-2"><Globe size={14} className="text-blue-500" /> <span>موقع الجامعة</span></div>
-            <ExternalLink size={12} className="opacity-0 group-hover:opacity-100" />
-          </a>
-          <a href="https://elearning.zuj.edu.jo/" target="_blank" rel="noreferrer" className="flex items-center justify-between p-2.5 bg-white rounded-lg text-xs font-bold text-gray-600 hover:text-[#1e5631] shadow-sm transition-all group">
-            <div className="flex items-center gap-2"><GraduationCap size={14} className="text-green-600" /> <span>التعلم الإلكتروني</span></div>
-            <ExternalLink size={12} className="opacity-0 group-hover:opacity-100" />
-          </a>
-          <a href="https://exams.zuj.edu.jo" target="_blank" rel="noreferrer" className="flex items-center justify-between p-2.5 bg-red-50/50 rounded-lg text-xs font-bold text-red-700 shadow-sm transition-all group border border-red-50">
-            <div className="flex items-center gap-2"><ClipboardList size={14} /> <span>بوابة الامتحانات</span></div>
-            <ExternalLink size={12} />
-          </a>
+          <p className="text-[10px] font-black text-gray-400 px-2 mb-2">روابط سريعة</p>
+          <a href="https://www.zuj.edu.jo/" target="_blank" className="flex items-center gap-2 p-2 bg-white rounded-lg text-xs font-bold text-gray-600 shadow-sm border border-gray-100 hover:border-green-200 transition-all"><Globe size={14} className="text-blue-500" /> موقع الجامعة</a>
+          <a href="https://elearning.zuj.edu.jo/" target="_blank" className="flex items-center gap-2 p-2 bg-white rounded-lg text-xs font-bold text-gray-600 shadow-sm border border-gray-100 hover:border-green-200 transition-all"><GraduationCap size={14} className="text-green-600" /> التعلم الإلكتروني</a>
+          <a href="https://exams.zuj.edu.jo" target="_blank" className="flex items-center gap-2 p-2 bg-white rounded-lg text-xs font-bold text-gray-600 shadow-sm border border-gray-100 hover:border-green-200 transition-all"><ClipboardList size={14} className="text-red-500" /> بوابة الامتحانات</a>
         </div>
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-20 bg-[#1e5631] text-white flex items-center justify-between px-8 z-10 shadow-lg">
+      <main className="flex-1 flex flex-col relative">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg"><Bot size={26} /></div>
-            <div>
-               <h1 className="text-lg font-black leading-none">المرشد الأكاديمي الذكي</h1>
-               <p className="text-[10px] font-bold opacity-70 mt-1">" الريادة والإبداع في الأعمال "</p>
-            </div>
+            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center"><Bot size={22} className="text-[#1e5631]" /></div>
+            <h1 className="font-black text-gray-800">المرشد الأكاديمي الذكي</h1>
           </div>
-          <span className="text-[11px] font-black bg-white/10 px-4 py-2 rounded-full border border-white/20 uppercase">قسم نظم المعلومات الإدارية</span>
+          <div className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
+             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+             <span className="text-[11px] font-bold text-gray-600">قسم نظم المعلومات الإدارية</span>
+          </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-10">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+          <div className="max-w-4xl mx-auto">
             {activeChat.messages.length === 0 ? (
-              <div className="text-center py-16 animate-fade-in bg-white rounded-[40px] shadow-2xl border border-gray-50 p-10">
-                <div className="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
-                   <Layout size={40} className="text-[#1e5631]" />
-                </div>
-                <h2 className="text-3xl font-black text-gray-900 mb-2">مرحباً بكِ في منصة الإرشاد</h2>
-                <p className="text-gray-500 text-base mb-10 font-medium">نحن هنا لخدمة طلاب كلية الأعمال وتسهيل مسيرتهم الأكاديمية</p>
-                <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                  {["الخطة الدراسية لكلية الأعمال", "شروط تسجيل مشروع التخرج", "الحد الأعلى للساعات المعتمدة", "إجراءات التحويل بين التخصصات"].map((q, i) => (
-                    <button key={i} onClick={() => sendMessage(q)} className="p-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-gray-700 hover:border-[#1e5631] hover:bg-green-50 hover:text-[#1e5631] transition-all flex justify-between items-center group">
-                      {q} <span className="opacity-0 group-hover:opacity-100">←</span>
+              <div className="mt-10 animate-fade-in text-center">
+                <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 mb-8">
+                  <h2 className="text-2xl font-black text-gray-900 mb-4">أهلاً بكِ في كلية الأعمال</h2>
+                  <p className="text-gray-500 font-medium mb-10">يمكنني مساعدتكِ في استخراج المعلومات من الخطة الدراسية وجداول الساعات</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onClick={() => sendMessage("اعرض لي الخطة الدراسية")} className="p-6 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-[#1e5631] transition-all group flex flex-col items-center">
+                       <BookOpen className="text-blue-500 mb-3 group-hover:scale-110 transition-transform" />
+                       <span className="text-sm font-bold text-gray-700">الخطة الدراسية</span>
                     </button>
-                  ))}
+                    <button onClick={() => sendMessage("ما هي مواد تخصصي؟")} className="p-6 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-[#1e5631] transition-all group flex flex-col items-center">
+                       <Layers className="text-green-500 mb-3 group-hover:scale-110 transition-transform" />
+                       <span className="text-sm font-bold text-gray-700">مواد القسم</span>
+                    </button>
+                    <button onClick={() => sendMessage("كيف تتم معادلة المواد؟")} className="p-6 bg-white border border-gray-100 rounded-2xl shadow-sm hover:border-[#1e5631] transition-all group flex flex-col items-center">
+                       <Repeat className="text-orange-500 mb-3 group-hover:scale-110 transition-transform" />
+                       <span className="text-sm font-bold text-gray-700">معادلة المواد</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
               activeChat.messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} message-appear`}>
-                  <div className={`p-5 rounded-2xl max-w-[85%] text-sm md:text-base leading-relaxed ${
-                    msg.role === "user" 
-                    ? "bg-[#1e5631] text-white shadow-lg shadow-green-900/20 rounded-tr-none" 
-                    : "bg-white border border-gray-200 text-gray-800 shadow-sm rounded-tl-none"
+                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} mb-6 animate-slide-up`}>
+                  <div className={`p-4 md:p-5 rounded-2xl max-w-[85%] text-sm font-bold shadow-sm leading-relaxed ${
+                    msg.role === "user" ? "bg-[#1e5631] text-white rounded-tr-none" : "bg-white border border-gray-100 text-gray-800 rounded-tl-none"
                   }`}>
-                    {formatResponse(msg.text)}
+                    {msg.text}
                   </div>
                 </div>
               ))
             )}
-            {loading && <div className="text-sm font-bold text-[#1e5631] animate-pulse pr-4">جاري تحليل البيانات الأكاديمية...</div>}
+            {loading && <div className="text-xs font-bold text-[#1e5631] animate-pulse px-4 flex items-center gap-2"><Bot size={14}/> جاري مراجعة السجلات الأكاديمية...</div>}
             <div ref={messagesEndRef} />
           </div>
         </div>
 
-        <footer className="p-6 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
-          <form onSubmit={(e) => { e.preventDefault(); sendMessage(inputValue); }} className="max-w-4xl mx-auto flex gap-3">
+        <footer className="p-6 bg-transparent border-t border-gray-100">
+          <form onSubmit={(e) => { e.preventDefault(); sendMessage(inputValue); }} className="max-w-4xl mx-auto relative group">
             <input 
-              className="flex-1 p-5 rounded-2xl border-none focus:ring-2 focus:ring-[#1e5631] outline-none transition-all text-sm font-bold bg-[#F4F7F5] shadow-inner" 
-              placeholder="اسألي مرشدك الأكاديمي عن الخطط، الساعات، أو القوانين..." 
+              className="w-full p-5 pr-14 rounded-[1.5rem] border-none bg-white shadow-xl focus:ring-2 focus:ring-[#1e5631] outline-none transition-all text-sm font-bold text-gray-700 placeholder:text-gray-300" 
+              placeholder="اكتبي استفسارك عن المواد، الخطة، أو الساعات..." 
               value={inputValue} 
               onChange={(e) => setInputValue(e.target.value)} 
             />
-            <button className="bg-[#1e5631] text-white px-8 rounded-2xl hover:bg-[#163d25] transition-all shadow-lg flex items-center">
-              <Send size={20} className="rotate-180" />
+            <button className="absolute left-3 top-1/2 -translate-y-1/2 bg-[#1e5631] text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[#163d25] transition-all shadow-md">
+              <Send size={18} className="rotate-180" />
             </button>
           </form>
+          <p className="text-center text-[9px] text-gray-400 mt-4 font-bold">بناءً على بيانات قسم نظم المعلومات الإدارية - جامعة الزيتونة الأردنية</p>
         </footer>
       </main>
     </div>
