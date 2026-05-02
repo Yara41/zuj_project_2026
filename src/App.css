@@ -1,33 +1,87 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 
+:root {
+  --primary-green: #1e5631;
+  --light-bg: #f8fafc;
+  --user-msg: #1e5631;
+  --bot-msg: #ffffff;
+}
+
 body {
   margin: 0;
   font-family: 'Cairo', sans-serif;
-  background-color: #F4F7F5;
+  background-color: var(--light-bg);
   -webkit-font-smoothing: antialiased;
+  color: #1e293b;
 }
 
-/* تحسين السكرول بار ليناسب كلية الأعمال */
+/* تحسين السكرول بار ليصبح نحيفاً وأنيقاً */
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
+  background: #e2e8f0;
+  border-radius: 20px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #1e5631;
+  background: #cbd5e1;
 }
 
-/* انيميشن لدخول الرسائل */
-.message-enter {
-  animation: slideUp 0.3s ease-out;
+/* تأثير Glassmorphism الخفيف للهيدر والسايدبار */
+aside, header {
+  backdrop-filter: blur(10px);
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+/* تنسيق الشعارات لتكون واضحة وكبيرة */
+aside img {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+  transition: transform 0.3s ease;
+}
+
+aside img:hover {
+  transform: scale(1.1);
+}
+
+/* أنيميشن متطور لظهور الرسائل */
+.message-appear {
+  animation: messageSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* تنسيق البطاقة الترحيبية لتكون "مودرن" */
+.welcome-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+}
+
+/* تحسين شكل المدخلات (Input) */
+input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* تأثير التدرج للردود */
+.bot-message-shadow {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.user-message-shadow {
+  box-shadow: 0 10px 15px -3px rgba(30, 86, 49, 0.2);
 }
