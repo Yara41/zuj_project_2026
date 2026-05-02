@@ -1,184 +1,44 @@
-/* ===== General Styling ===== */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+
 body {
   margin: 0;
   font-family: 'Cairo', sans-serif;
-  background: #f0f2f5; /* خلفية أهدأ قليلاً */
-  direction: rtl;
-  color: #1e293b;
-}
-
-/* ===== App Layout ===== */
-.app-shell {
-  display: flex;
-  height: 100vh;
   overflow: hidden;
 }
 
-/* ===== Sidebar (Modern Professional) ===== */
-.sidebar {
-  width: 280px;
-  background: #ffffff; /* تغيير اللون لأبيض لإعطاء شعور بالاتساع والاحترافية */
-  border-left: 1px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.02);
+/* انيميشن لظهور المحتوى بسلاسة */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* زر محادثة جديدة كما في صورتك القديمة */
-.new-chat-btn {
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  color: #1e40af;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 20px;
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
-.new-chat-btn:hover {
-  background: #eff6ff;
-  border-color: #1e40af;
+/* تحسين شكل السكرول بار */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* ===== Topbar (Zuj Identity) ===== */
-.topbar {
-  background: #1e3a8a; /* أزرق ملكي أكاديمي */
-  color: white;
-  padding: 15px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
 }
 
-.topbar h1 {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
+::-webkit-scrollbar-thumb {
+  background: #1e5631;
+  border-radius: 10px;
 }
 
-/* ===== Main Content Area ===== */
-.chat-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #f8fafc;
-  position: relative;
+::-webkit-scrollbar-thumb:hover {
+  background: #163d25;
 }
 
-/* ===== Welcome Section (Cards Style) ===== */
-.welcome-section {
-  text-align: center;
-  margin: auto;
-  max-width: 700px;
-  padding: 20px;
+/* تأثيرات الظلال للأزرار */
+button {
+  transition: all 0.2s ease;
 }
 
-.welcome-section h2 {
-  font-size: 2.5rem;
-  color: #0f172a;
-  margin-bottom: 10px;
-}
-
-/* شبكة البطاقات (Cards Grid) كما في الواجهة القديمة */
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-top: 30px;
-}
-
-.quick-card {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-
-.quick-card:hover {
-  transform: translateY(-3px);
-  border-color: #3b82f6;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-}
-
-/* ===== Messages Area ===== */
-.messages-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 30px;
-}
-
-.user-bubble {
-  background: #1e3a8a;
-  color: white;
-  padding: 14px 20px;
-  border-radius: 20px 20px 4px 20px;
-  max-width: 75%;
-  margin-right: auto; /* دفعها لليسار */
-  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
-}
-
-.ai-bubble {
-  background: white;
-  color: #1e293b;
-  padding: 14px 20px;
-  border-radius: 20px 20px 20px 4px;
-  max-width: 75%;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-/* ===== Modern Chat Footer ===== */
-.chat-footer {
-  padding: 25px;
-  background: transparent;
-}
-
-.input-shell {
-  max-width: 850px;
-  margin: auto;
-  display: flex;
-  background: white;
-  padding: 8px;
-  border-radius: 18px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  border: 1px solid #e2e8f0;
-}
-
-.chat-input {
-  flex: 1;
-  border: none;
-  padding: 12px 20px;
-  font-size: 1rem;
-  outline: none;
-  background: transparent;
-}
-
-.send-btn {
-  background: #1e3a8a;
-  color: white;
-  border: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: 0.3s;
-}
-
-.send-btn:hover {
-  background: #1e40af;
-  transform: scale(1.05);
+button:active {
+  transform: scale(0.98);
 }
