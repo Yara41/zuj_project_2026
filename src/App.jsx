@@ -171,7 +171,7 @@ export default function App() {
                 <h2 className="text-xl md:text-3xl font-black text-gray-900 mb-2">مرحباً بكِ في منصة الإرشاد</h2>
                 <p className="text-gray-500 text-sm md:text-base mb-8 md:mb-10 font-medium">نحن هنا لخدمة طلاب كلية الأعمال وتسهيل مسيرتهم الأكاديمية</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 max-w-2xl mx-auto">
-                  {["متطلبات الإرشاد الأكاديمي", "شروط تسجيل مشروع التخرج", "الحد الأعلى للساعات المعتمدة", "إجراءات التحويل بين التخصصات"].map((q, i) => (
+                  {["متطلبات الإرشاد الأكاديمي", "شروط تسجيل مشروع التخرج", "الحد الأعلى للساعات المعتمدة","متطلبات الجامعة الإجبارية في تخصص ذكاء الأعمال"].map((q, i) => (
                     <button key={i} onClick={() => sendMessage(q)} className="p-4 md:p-5 bg-gray-50 border border-gray-100 rounded-2xl text-xs md:text-sm font-bold text-gray-700 hover:border-[#1e5631] hover:bg-green-50 hover:text-[#1e5631] transition-all flex justify-between items-center group">
                       {q} <span className="opacity-0 group-hover:opacity-100">←</span>
                     </button>
