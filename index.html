@@ -1,48 +1,62 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المرشد الأسري والتربوي الذكي</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>المرشد الذكي</h1>
+                <button class="new-chat-btn" id="newChatBtn">
+                    <span>+</span> استشارة جديدة
+                </button>
+            </div>
+            
+            <div class="chat-history">
+                <p class="history-label">المحادثات السابقة</p>
+                <div id="historyList">
+                    </div>
+            </div>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <div class="sidebar-footer">
+                <button class="clear-all-btn" id="clearAllBtn">مسح السجل كاملاً</button>
+            </div>
+        </aside>
 
-    <title>المساعد الأكاديمي | جامعة الزيتونة الأردنية</title>
+        <main class="chat-area">
+            <header class="chat-header">
+                <div class="status-info">
+                    <h2>جلسة استشارية</h2>
+                    <div class="online-indicator">
+                        <span class="dot"></span> متصل الآن
+                    </div>
+                </div>
+                <button class="menu-toggle" id="menuToggle">☰</button>
+            </header>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/logo.png" />
+            <div class="messages-container" id="messagesContainer">
+                <div class="message bot">أهلاً بك في فضاء المرشد الأسري. كيف يمكنني مساعدتك اليوم؟</div>
+            </div>
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-    <!-- Open Graph (WhatsApp / Facebook / LinkedIn) -->
-    <meta property="og:title" content="المساعد الأكاديمي - جامعة الزيتونة الأردنية" />
-    <meta property="og:description" content="مساعد ذكي لمساعدة طلاب جامعة الزيتونة في الاستفسارات الأكاديمية مثل القبول والتخصصات والخطط الدراسية" />
-    <meta property="og:image" content="/preview.png" />
-    <meta property="og:url" content="https://your-project-link.netlify.app/" />
-    <meta property="og:type" content="website" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="المساعد الأكاديمي - جامعة الزيتونة الأردنية" />
-    <meta name="twitter:description" content="مساعد ذكي للإجابة عن استفسارات الطلبة الأكاديمية" />
-    <meta name="twitter:image" content="/preview.png" />
-
-    <style>
-      body {
-        margin: 0;
-        font-family: 'Cairo', sans-serif;
-        background: #f8fafc;
-      }
-    </style>
-
-  </head>
-
-  <body>
-
-    <!-- React App Root -->
-    <div id="root"></div>
-
-    <!-- Main App -->
-    <script type="module" src="/src/main.jsx"></script>
-
-  </body>
+            <div class="input-section">
+                <div class="suggestions">
+                    <button onclick="quickSend('كيف أتعامل مع عناد طفلي؟')">عناد الطفل</button>
+                    <button onclick="quickSend('تنظيم وقت الدراسة')">وقت الدراسة</button>
+                    <button onclick="quickSend('بناء الثقة بالنفس')">الثقة بالنفس</button>
+                </div>
+                <div class="input-wrapper">
+                    <input type="text" id="userInput" placeholder="اسأل المرشد التربوي...">
+                    <button id="sendBtn">إرسال</button>
+                </div>
+                <p class="disclaimer">ذكاء اصطناعي للمساعدة التربوية</p>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
 </html>

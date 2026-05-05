@@ -24,9 +24,8 @@ export async function handler(event) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
 
-    // 🔥 تأكدي أن هذا هو رابط الـ Production (بدون كلمة test)
-    // وتأكدي أن الـ Workflow في n8n هو "Active"
-    const N8N_URL = "http://13.61.19.235:5678/webhook/b7ed42af-3773-4af7-a9d3-704e062369c8";
+    // 🔥 رابط الـ Production الخاص بك على n8n
+    const N8N_URL = "http://13.61.19.235:5678/webhook/fc028940-84fb-40a3-95e2-e7437566b8d7";
 
     const response = await fetch(N8N_URL, {
       method: "POST",
@@ -34,8 +33,8 @@ export async function handler(event) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        chatInput: body.question, // هنا نرسل السؤال لـ n8n تحت اسم chatInput
-        sessionId: body.sessionId || "user_default",
+        chatInput: body.question, // إرسال السؤال لـ n8n
+        sessionId: body.sessionId || "family_mentor_session", // معرف الجلسة
       }),
       signal: controller.signal,
     });
@@ -56,7 +55,6 @@ export async function handler(event) {
     }
 
     // 🔥 آلية استخراج الرد (تغطي كافة التوقعات من n8n)
-    // سيبحث عن النتيجة في حقول: output, response, answer, text
     let finalOutput =
       data.output || 
       data.response || 
@@ -69,7 +67,7 @@ export async function handler(event) {
       statusCode: 200,
       headers: corsHeaders(),
       body: JSON.stringify({
-        output: finalOutput, // هذا هو الحقل الذي ستقرأه واجهة المستخدم
+        output: finalOutput, // الحقل الذي ستقرأه واجهة React
       }),
     };
 
@@ -86,7 +84,7 @@ export async function handler(event) {
   }
 }
 
-// 🔹 إعدادات CORS للسماح بالاتصال من أي مصدر (Origin)
+// 🔹 إعدادات CORS للسماح بالاتصال من واجهة الموقع (Netlify)
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",

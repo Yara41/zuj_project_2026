@@ -1,215 +1,242 @@
-import { useState, useEffect, useRef } from "react";
-import { Trash2, Send, Plus, MessageSquare, ExternalLink, Globe, GraduationCap, ClipboardList, Bot, Layout, Menu, X } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Send, Trash, User, Bot, Plus, MessageSquare, Heart, BookOpen, Star, Menu, X } from 'lucide-react';
 
-export default function App() {
-  const [chats, setChats] = useState(() => {
-    const saved = localStorage.getItem("zuj_advisor_chats");
-    return saved ? JSON.parse(saved) : [{ id: Date.now(), title: "محادثة جديدة", messages: [] }];
-  });
-  
-  const [activeChatId, setActiveChatId] = useState(chats[0].id);
-  const [inputValue, setInputValue] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // إضافة حالة القائمة للجوال
-  const messagesEndRef = useRef(null);
+const MentorApp = () => {
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [conversations, setConversations] = useState([]);
+  const [currentId, setCurrentId] = useState(Date.now());
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // للتحكم في القائمة على الموبايل
 
-  const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
-
+  // تحميل البيانات عند تشغيل التطبيق
   useEffect(() => {
-    localStorage.setItem("zuj_advisor_chats", JSON.stringify(chats));
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chats]);
+    const savedData = localStorage.getItem('mentor_data');
+    if (savedData) {
+      setConversations(JSON.parse(savedData));
+    }
+  }, []);
 
-  const formatResponse = (text) => {
+  const handleSend = async (text = input) => {
+    const messageText = typeof text === 'string' ? text : input;
+    if (!messageText.trim()) return;
+
+    const userMessage = { role: 'user', content: messageText };
+    const updatedMessages = [...messages, userMessage];
+    
+    setMessages(updatedMessages);
+    setInput('');
+    setIsTyping(true);
+
     try {
-      const parsed = JSON.parse(text);
-      return parsed.output || text;
-    } catch (e) { return text; }
-  };
+      const response = await fetch('http://13.61.19.235:5678/webhook/fc028940-84fb-40a3-95e2-e7437566b8d7', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: messageText }),
+      });
 
-  const createNewChat = () => {
-    const newChat = { id: Date.now(), title: "محادثة جديدة", messages: [] };
-    setChats([newChat, ...chats]);
-    setActiveChatId(newChat.id);
-    setIsMobileMenuOpen(false); // إغلاق القائمة بعد إنشاء محادثة في الجوال
-  };
+      if (!response.ok) throw new Error('فشل الاتصال');
 
-  const deleteChat = (id, e) => {
-    e.stopPropagation();
-    const filtered = chats.filter(c => c.id !== id);
-    if (filtered.length === 0) {
-      const reset = [{ id: Date.now(), title: "محادثة جديدة", messages: [] }];
-      setChats(reset);
-      setActiveChatId(reset[0].id);
-    } else {
-      setChats(filtered);
-      if (activeChatId === id) setActiveChatId(filtered[0].id);
+      const data = await response.json();
+      const botResponse = data.output || data.response || (data[0] && data[0].output);
+      
+      const botMsg = { 
+        role: 'bot', 
+        content: botResponse || "عذراً، لم أتمكن من الحصول على إجابة." 
+      };
+
+      const finalMessages = [...updatedMessages, botMsg];
+      setMessages(finalMessages);
+
+      // تحديث قائمة المحادثات
+      let updatedConv;
+      const existingConv = conversations.find(c => c.id === currentId);
+      
+      if (existingConv) {
+        updatedConv = conversations.map(c => 
+          c.id === currentId ? { ...c, messages: finalMessages } : c
+        );
+      } else {
+        updatedConv = [{ id: currentId, messages: finalMessages }, ...conversations];
+      }
+      
+      setConversations(updatedConv);
+      localStorage.setItem('mentor_data', JSON.stringify(updatedConv));
+
+    } catch (error) {
+      setMessages([...updatedMessages, { 
+        role: 'bot', 
+        content: 'عذراً، حدث خطأ في الاتصال.' 
+      }]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
-  const sendMessage = async (text) => {
-    if (!text.trim()) return;
-    const newMessage = { role: "user", text };
-    const updatedChats = chats.map(chat => {
-      if (chat.id === activeChatId) {
-        const newTitle = chat.messages.length === 0 ? text.substring(0, 25) : chat.title;
-        return { ...chat, title: newTitle, messages: [...chat.messages, newMessage] };
-      }
-      return chat;
-    });
-    setChats(updatedChats);
-    setInputValue("");
-    setLoading(true);
-    try {
-      const res = await fetch("/.netlify/functions/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, sessionId: activeChatId.toString() }),
-      });
-      const data = await res.json();
-      setChats(prev => prev.map(chat => 
-        chat.id === activeChatId ? { ...chat, messages: [...chat.messages, { role: "bot", text: data.output || "نعتذر، لم نتمكن من جلب الرد حالياً." }] } : chat
-      ));
-    } catch (err) { console.error(err); }
-    setLoading(false);
+  // وظيفة مسح محادثة معينة (سلة المهملات)
+  const deleteConversation = (e, id) => {
+    e.stopPropagation();
+    const updated = conversations.filter(c => c.id !== id);
+    setConversations(updated);
+    localStorage.setItem('mentor_data', JSON.stringify(updated));
+    if (currentId === id) {
+      setMessages([]);
+      setCurrentId(Date.now());
+    }
   };
 
-  // مكون محتوى السايد بار (لتجنب التكرار)
-  const SidebarContent = () => (
-    <>
-      <div className="p-8 flex flex-col items-center border-b border-gray-50">
-        <div className="flex gap-6 mb-4">
-          <img src="/OIP (1).webp" alt="ZUJ Logo" className="w-20 h-20 md:w-24 md:h-24 object-contain" />
-          <img src="/OIP (2).webp" alt="Faculty Logo" className="w-20 h-20 md:w-24 md:h-24 object-contain" />
-        </div>
-        <h2 className="font-black text-[#1e5631] text-lg">جامعة الزيتونة الأردنية</h2>
-        <p className="text-[9px] text-gray-400 font-bold tracking-[0.2em] uppercase">" عراقة وجـودة "</p>
-      </div>
-
-      <div className="p-4 flex-1 overflow-y-auto space-y-2">
-        <button onClick={createNewChat} className="w-full flex items-center justify-center gap-2 bg-[#1e5631] text-white p-4 rounded-xl font-bold hover:bg-[#163d25] transition-all mb-4 shadow-md">
-          <Plus size={20} /> محادثة جديدة
-        </button>
-        <p className="text-[11px] font-black text-gray-400 px-2 mb-2">سجل الإرشاد</p>
-        {chats.map(chat => (
-          <div key={chat.id} 
-               onClick={() => { setActiveChatId(chat.id); setIsMobileMenuOpen(false); }} 
-               className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${activeChatId === chat.id ? "bg-green-50 border border-green-100" : "hover:bg-gray-50"}`}>
-            <div className="flex items-center gap-3 overflow-hidden">
-              <MessageSquare size={18} className={activeChatId === chat.id ? "text-[#1e5631]" : "text-gray-400"} />
-              <span className={`text-sm truncate ${activeChatId === chat.id ? "text-[#1e5631] font-bold" : "text-gray-600"}`}>{chat.title}</span>
-            </div>
-            <Trash2 size={15} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => deleteChat(chat.id, e)} />
-          </div>
-        ))}
-      </div>
-
-      <div className="p-4 border-t border-gray-100 bg-gray-50/50 space-y-2">
-        <p className="text-[10px] font-black text-gray-400 px-2 uppercase mb-2">بوابة الخدمات الطلابية</p>
-        <a href="https://www.zuj.edu.jo/" target="_blank" rel="noreferrer" className="flex items-center justify-between p-2.5 bg-white rounded-lg text-xs font-bold text-gray-600 hover:text-[#1e5631] shadow-sm transition-all group">
-          <div className="flex items-center gap-2"><Globe size={14} className="text-blue-500" /> <span>موقع الجامعة</span></div>
-          <ExternalLink size={12} className="opacity-0 group-hover:opacity-100" />
-        </a>
-        <a href="https://elearning.zuj.edu.jo/" target="_blank" rel="noreferrer" className="flex items-center justify-between p-2.5 bg-white rounded-lg text-xs font-bold text-gray-600 hover:text-[#1e5631] shadow-sm transition-all group">
-          <div className="flex items-center gap-2"><GraduationCap size={14} className="text-green-600" /> <span>التعلم الإلكتروني</span></div>
-          <ExternalLink size={12} className="opacity-0 group-hover:opacity-100" />
-        </a>
-        <a href="https://exams.zuj.edu.jo" target="_blank" rel="noreferrer" className="flex items-center justify-between p-2.5 bg-red-50/50 rounded-lg text-xs font-bold text-red-700 shadow-sm transition-all group border border-red-50">
-          <div className="flex items-center gap-2"><ClipboardList size={14} /> <span>بوابة الامتحانات</span></div>
-          <ExternalLink size={12} />
-        </a>
-      </div>
-    </>
-  );
+  const quickSend = (text) => handleSend(text);
 
   return (
-    <div className="flex h-screen bg-[#F4F7F5] font-['Cairo'] text-right" dir="rtl">
+    <div className="flex h-screen bg-[#f8f9fa] font-sans text-right overflow-hidden" dir="rtl">
       
-      {/* SIDEBAR - Desktop */}
-      <aside className="w-85 bg-white border-l border-gray-100 flex flex-col shadow-xl hidden lg:flex">
-        <SidebarContent />
-      </aside>
-
-      {/* SIDEBAR - Mobile Overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="relative w-80 bg-white h-full shadow-2xl flex flex-col animate-slide-left">
-            <button className="absolute left-4 top-4 p-2 text-gray-400 hover:text-red-500" onClick={() => setIsMobileMenuOpen(false)}>
-              <X size={24} />
-            </button>
-            <SidebarContent />
+      {/* Sidebar - القائمة الجانبية (متجاوبة) */}
+      <div className={`
+        fixed inset-y-0 right-0 z-50 w-72 bg-white border-l border-gray-200 flex flex-col shadow-xl transition-transform duration-300 lg:relative lg:translate-x-0 lg:shadow-sm
+        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+      `}>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6 lg:block">
+             <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <Heart className="text-rose-500" /> المرشد الذكي
+             </h1>
+             <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2"><X /></button>
           </div>
+          
+          {/* زر استشارة جديدة - تم تفعيل الوظيفة */}
+          <button 
+            onClick={() => {
+              setCurrentId(Date.now());
+              setMessages([]);
+              setIsSidebarOpen(false);
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-[#5d6d54] text-white py-3 rounded-xl hover:bg-[#4a5743] transition-all shadow-md active:scale-95"
+          >
+            <Plus size={20} /> استشارة جديدة
+          </button>
         </div>
-      )}
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-20 bg-[#1e5631] text-white flex items-center justify-between px-4 md:px-8 z-10 shadow-lg">
-          <div className="flex items-center gap-3">
-            {/* زر فتح المنيو للجوال */}
-            <button className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors" onClick={() => setIsMobileMenuOpen(true)}>
-              <Menu size={24} />
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <p className="text-xs font-semibold text-gray-400 mb-4 px-2 uppercase tracking-wider">المحادثات السابقة</p>
+          {conversations.map(conv => (
+            <div key={conv.id} 
+                 onClick={() => { setCurrentId(conv.id); setMessages(conv.messages); setIsSidebarOpen(false); }}
+                 className={`group flex items-center justify-between p-3 rounded-xl mb-2 cursor-pointer transition-all ${currentId === conv.id ? 'bg-[#f0f4ee] text-[#5d6d54]' : 'hover:bg-gray-50'}`}>
+              <div className="flex items-center gap-3 overflow-hidden">
+                <MessageSquare size={18} className={currentId === conv.id ? 'text-[#5d6d54]' : 'text-gray-400'} />
+                <span className="truncate text-sm font-medium">{conv.messages[0]?.content || 'استشارة جديدة'}</span>
+              </div>
+              <button 
+                onClick={(e) => deleteConversation(e, conv.id)}
+                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-rose-50 rounded-lg transition-all"
+              >
+                <Trash size={16} className="text-gray-400 hover:text-rose-500" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col relative bg-[#fdfdfd] w-full">
+        {/* Header */}
+        <div className="p-4 lg:p-6 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 hover:bg-gray-100 rounded-lg">
+                <Menu size={24} />
             </button>
-            
-            <div className="p-2 bg-white/10 rounded-lg hidden sm:block"><Bot size={26} /></div>
             <div>
-               <h1 className="text-sm md:text-lg font-black leading-none">المرشد الأكاديمي الذكي</h1>
-               <p className="text-[9px] md:text-[10px] font-bold opacity-70 mt-1">" الريادة والإبداع في الأعمال "</p>
+              <h2 className="text-lg lg:text-xl font-bold text-gray-800">جلسة استشارية</h2>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="text-xs text-gray-500 font-medium">متصل الآن</span>
+              </div>
             </div>
           </div>
-          <span className="text-[9px] md:text-[11px] font-black bg-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-white/20 uppercase">كلية الأعمال - جامعة الزيتونة</span>
-        </header>
+        </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-10">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {activeChat.messages.length === 0 ? (
-              <div className="text-center py-10 md:py-16 animate-fade-in bg-white rounded-[30px] md:rounded-[40px] shadow-2xl border border-gray-50 p-6 md:p-10">
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-green-50 rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
-                   <Layout size={30} className="md:size-[40px] text-[#1e5631]" />
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6">
+          {messages.length === 0 && (
+            <div className="text-center mt-10 lg:mt-20">
+              <div className="bg-rose-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="text-rose-500" size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">كيف يمكنني مساعدتك اليوم؟</h3>
+              <p className="text-gray-500 mt-2 max-w-xs mx-auto">أنا هنا لدعمك في رحلتك التربوية والأسرية بكل خصوصية.</p>
+            </div>
+          )}
+          
+          {messages.map((msg, index) => (
+            <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] lg:max-w-[75%] flex gap-3 lg:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div className={`w-8 h-8 lg:w-9 lg:h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${msg.role === 'user' ? 'bg-[#5d6d54]' : 'bg-white border border-gray-100'}`}>
+                  {msg.role === 'user' ? <User size={16} className="text-white" /> : <Bot size={16} className="text-[#5d6d54]" />}
                 </div>
-                <h2 className="text-xl md:text-3xl font-black text-gray-900 mb-2">مرحباً بكِ في منصة الإرشاد</h2>
-                <p className="text-gray-500 text-sm md:text-base mb-8 md:mb-10 font-medium">نحن هنا لخدمة طلاب كلية الأعمال وتسهيل مسيرتهم الأكاديمية</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 max-w-2xl mx-auto">
-                  {["متطلبات الإرشاد الأكاديمي", "شروط تسجيل مشروع التخرج", "الحد الأعلى للساعات المعتمدة","متطلبات الجامعة الإجبارية في تخصص ذكاء الأعمال"].map((q, i) => (
-                    <button key={i} onClick={() => sendMessage(q)} className="p-4 md:p-5 bg-gray-50 border border-gray-100 rounded-2xl text-xs md:text-sm font-bold text-gray-700 hover:border-[#1e5631] hover:bg-green-50 hover:text-[#1e5631] transition-all flex justify-between items-center group">
-                      {q} <span className="opacity-0 group-hover:opacity-100">←</span>
-                    </button>
-                  ))}
+                <div className={`p-3 lg:p-4 rounded-2xl shadow-sm ${msg.role === 'user' ? 'bg-[#5d6d54] text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'}`}>
+                  <p className="text-sm leading-relaxed">{msg.content}</p>
                 </div>
               </div>
-            ) : (
-              activeChat.messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} message-appear`}>
-                  <div className={`p-4 md:p-5 rounded-2xl max-w-[90%] md:max-w-[85%] text-sm md:text-base leading-relaxed ${
-                    msg.role === "user" 
-                    ? "bg-[#1e5631] text-white shadow-lg shadow-green-900/20 rounded-tr-none" 
-                    : "bg-white border border-gray-200 text-gray-800 shadow-sm rounded-tl-none"
-                  }`}>
-                    {formatResponse(msg.text)}
-                  </div>
-                </div>
-              ))
-            )}
-            {loading && <div className="text-xs md:text-sm font-bold text-[#1e5631] animate-pulse pr-4">جاري تحليل البيانات الأكاديمية...</div>}
-            <div ref={messagesEndRef} />
+            </div>
+          ))}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-white border border-gray-100 p-4 rounded-2xl flex gap-1 shadow-sm">
+                <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></span>
+                <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Suggestions - تحسين البطاقات */}
+        <div className="px-4 lg:px-8 pb-4">
+          <div className="flex flex-wrap gap-3 justify-center">
+            {[
+              { id: '1', text: 'عناد الطفل', icon: <User size={14} />, color: 'hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50' },
+              { id: '2', text: 'وقت الدراسة', icon: <BookOpen size={14} />, color: 'hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50' },
+              { id: '3', text: 'الثقة بالنفس', icon: <Star size={14} />, color: 'hover:border-rose-400 hover:text-rose-700 hover:bg-rose-50' }
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => quickSend(item.text)}
+                className={`flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-xl shadow-sm transition-all duration-300 text-gray-600 text-sm font-medium hover:-translate-y-1 hover:shadow-md ${item.color}`}
+              >
+                {item.icon}
+                {item.text}
+              </button>
+            ))}
           </div>
         </div>
 
-        <footer className="p-4 md:p-6 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
-          <form onSubmit={(e) => { e.preventDefault(); sendMessage(inputValue); }} className="max-w-4xl mx-auto flex gap-2 md:gap-3">
-            <input 
-              className="flex-1 p-4 md:p-5 rounded-2xl border-none focus:ring-2 focus:ring-[#1e5631] outline-none transition-all text-xs md:text-sm font-bold bg-[#F4F7F5] shadow-inner" 
-              placeholder="اسأل مرشدك الأكاديمي..." 
-              value={inputValue} 
-              onChange={(e) => setInputValue(e.target.value)} 
+        {/* Input Area */}
+        <div className="p-4 lg:p-8 pt-0">
+          <div className="relative max-w-4xl mx-auto">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="اسأل المرشد التربوي..."
+              className="w-full p-4 lg:p-5 pr-4 pl-14 rounded-2xl border border-gray-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-[#5d6d54]/20 focus:border-[#5d6d54] transition-all bg-white text-sm lg:text-base"
             />
-            <button className="bg-[#1e5631] text-white px-5 md:px-8 rounded-2xl hover:bg-[#163d25] transition-all shadow-lg flex items-center">
-              <Send size={20} className="rotate-180" />
+            <button 
+              onClick={() => handleSend()}
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-[#5d6d54] p-2 lg:p-2.5 rounded-xl text-white hover:bg-[#4a5743] transition-all shadow-md active:scale-90"
+            >
+              <Send size={18} />
             </button>
-          </form>
-        </footer>
-      </main>
+          </div>
+        </div>
+      </div>
+      
+      {/* Overlay للموبايل */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 bg-black/20 z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>
+      )}
     </div>
   );
-}
+};
+
+export default MentorApp;

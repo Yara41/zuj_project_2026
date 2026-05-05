@@ -1,80 +1,77 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 
-/* ===== Base Styles ===== */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --primary-color: #1e3a8a; /* أزرق جامعة الزيتونة */
-  --bg-color: #f8fafc;
+  --olive-green: #5d6d54; /* تم توحيده مع كود الـ React */
+  --sand-beige: #f8f9fa;
+  --earth-tone: #ece8e1;
 }
 
-#root {
-  height: 100vh;
-  width: 100vw;
+body {
   margin: 0;
-  padding: 0;
-  overflow: hidden; /* يمنع السكرول الخارجي عشان نتحكم فيه جوا الشات */
-  direction: rtl;
-  font-family: 'Cairo', system-ui, -apple-system, sans-serif;
-  background: var(--bg-color);
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--sand-beige);
+  direction: rtl; /* لضمان اتجاه المحتوى العربي */
+  overflow: hidden; /* لمنع السكرول المزدوج في الشاشة */
 }
 
-/* ===== تحسينات السكرول (Custom Scrollbar) ===== */
-.custom-scrollbar::-webkit-scrollbar {
+/* تخصيص السكرول بار ليناسب الألوان الهادئة */
+::-webkit-scrollbar {
   width: 5px;
 }
-
-.custom-scrollbar::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
   border-radius: 10px;
 }
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--olive-green);
 }
 
-/* ===== أنيميشن نقاط التحميل (Typing Animation) ===== */
-.typing-dot {
-  width: 6px;
-  height: 6px;
-  margin: 0 2px;
-  background-color: #64748b;
-  border-radius: 50%;
-  display: inline-block;
-  animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+/* تحسين حركة البطاقات (التي تظهر في الأسفل) */
+.suggestion-card {
+  @apply transition-all duration-300 ease-in-out;
 }
 
-@keyframes sk-bouncedelay {
-  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
-  40% { transform: scale(1.0); opacity: 1; }
+.suggestion-card:hover {
+  transform: translateY(-5px);
+  @apply shadow-md border-[#5d6d54];
 }
 
-/* ===== تأثيرات بصرية للعناصر ===== */
-input, button {
-  font-family: inherit;
+/* تأثير ظهور الرسائل بسلاسة */
+.message-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
-button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* تحسين شكل الصور (اللوغو) */
-img {
-  max-width: 100%;
-  height: auto;
-  user-select: none;
+/* إخفاء السكرول بار للقوائم مع بقاء إمكانية التمرير */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* تحسين مظهر البطاقات عند التفاعل */
-.quick-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* تحسين شكل حقل الإدخال عند التركيز */
+input:focus {
+  outline: none;
 }
 
-/* تنسيقات إضافية للموبايل */
-@media (max-width: 768px) {
-  .messages-container {
-    padding: 15px !important;
+/* تعديلات خاصة للموبايل لضمان التجاوب */
+@media (max-width: 1024px) {
+  .chat-container {
+    height: calc(100vh - 80px); /* ترك مساحة للهيدر في الموبايل */
   }
 }

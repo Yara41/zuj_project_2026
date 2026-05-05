@@ -1,122 +1,73 @@
-<script>
-const chatWindow = document.getElementById('chatWindow');
-const messagesContent = document.getElementById('messagesContent');
-const chatForm = document.getElementById('chatForm');
+const messagesContainer = document.getElementById('messagesContainer');
 const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const historyList = document.getElementById('historyList');
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
 
-// ✅ التعديل هون
-const webhookUrl = '/.netlify/functions/chat';
+// حفظ المحادثات في localStorage
+let history = JSON.parse(localStorage.getItem('family_mentor_history')) || [];
 
-const sessionId = "user1";
-
-// إضافة رسالة
-function addMessage(text, isUser = false) {
-    const wrapper = document.createElement('div');
-    wrapper.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
-
-    const bubble = document.createElement('div');
-    bubble.className = `message-bubble p-4 md:p-5 ${isUser ? 'user-message' : 'bot-message'}`;
-
-    const messageText = document.createElement('p');
-    messageText.className = 'text-sm md:text-base leading-relaxed';
-    messageText.innerText = text;
-
-    bubble.appendChild(messageText);
-    wrapper.appendChild(bubble);
-    messagesContent.appendChild(wrapper);
-
-    scrollToBottom();
-}
-
-// لودينج
-function showLoading() {
-    const wrapper = document.createElement('div');
-    wrapper.id = 'loadingIndicator';
-    wrapper.className = 'flex justify-start';
-
-    wrapper.innerHTML = `
-        <div class="message-bubble bot-message p-4 shadow-sm flex items-center gap-3">
-            <span class="text-xs text-blue-600 font-bold">جاري المعالجة</span>
-            <div class="loading-dots">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-    `;
-
-    messagesContent.appendChild(wrapper);
-    scrollToBottom();
-}
-
-function removeLoading() {
-    const indicator = document.getElementById('loadingIndicator');
-    if (indicator) indicator.remove();
-}
-
-// سكرول
-function scrollToBottom() {
-    chatWindow.scrollTo({
-        top: chatWindow.scrollHeight,
-        behavior: 'smooth'
+function renderHistory() {
+    historyList.innerHTML = '';
+    history.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<span>${item.title}</span><span onclick="deleteChat(${index})">🗑️</span>`;
+        historyList.appendChild(div);
     });
 }
 
-// استخراج الرد
-function extractReply(data) {
-    try {
-        if (!data) return "لم يتم العثور على رد.";
-
-        if (typeof data === 'string') return data;
-
-        if (data.output) return data.output;
-
-        if (Array.isArray(data)) {
-            if (data[0]?.output) return data[0].output;
-            if (data[0]?.text) return data[0].text;
-        }
-
-        return JSON.stringify(data);
-    } catch {
-        return "حدث خطأ في قراءة الرد.";
-    }
+function appendMessage(role, text) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${role}`;
+    msgDiv.innerText = text;
+    messagesContainer.appendChild(msgDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// إرسال الرسالة
-async function sendMessageToWebhook(message) {
-    try {
-        const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                question: message   // ✅ مهم جدًا يتطابق مع chat.js
-            })
-        });
-
-        if (!response.ok) throw new Error('API Error');
-
-        const data = await response.json();
-
-        return extractReply(data);
-
-    } catch (error) {
-        console.error('Error:', error);
-        return "حدث خطأ أثناء الاتصال بالخادم.";
-    }
+function showTyping() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message bot';
+    typingDiv.id = 'typing';
+    typingDiv.innerText = 'جاري التفكير...';
+    messagesContainer.appendChild(typingDiv);
 }
 
-// إرسال من الفورم
-chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+sendBtn.onclick = () => {
+    const text = userInput.value;
+    if(!text) return;
 
-    const message = userInput.value.trim();
-    if (!message) return;
-
-    addMessage(message, true);
+    appendMessage('user', text);
     userInput.value = '';
-    showLoading();
+    
+    // حفظ في السجل إذا كانت أول رسالة
+    if(history.length === 0 || text.length > 5) {
+        history.push({title: text.substring(0, 20), date: new Date()});
+        localStorage.setItem('family_mentor_history', JSON.stringify(history));
+        renderHistory();
+    }
 
-    const reply = await sendMessageToWebhook(message);
+    showTyping();
 
-    removeLoading();
-    addMessage(reply, false);
-});
-</script>
+    // محاكاة رد الذكاء الاصطناعي
+    setTimeout(() => {
+        document.getElementById('typing').remove();
+        appendMessage('bot', "شكراً لسؤالك. بخصوص هذا الأمر التربوي، أنصحك بالصبر والحوار المستمر مع الأبناء.");
+    }, 1500);
+};
+
+function quickSend(text) {
+    userInput.value = text;
+    sendBtn.click();
+}
+
+function deleteChat(index) {
+    history.splice(index, 1);
+    localStorage.setItem('family_mentor_history', JSON.stringify(history));
+    renderHistory();
+}
+
+menuToggle.onclick = () => sidebar.classList.toggle('active');
+
+renderHistory();

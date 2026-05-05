@@ -1,23 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+/* 1. إعداد الخط الأساسي (IBM Plex Sans Arabic) */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-green: #1e5631;
-  --light-bg: #f8fafc;
-  --user-msg: #1e5631;
-  --bot-msg: #ffffff;
+  --olive-green: #5d6d54; /* تم تحديثه ليتطابق مع اللون في كود React */
+  --sand-beige: #f8f9fa;
+  --earth-tone: #ece8e1;
+  --white: #ffffff;
 }
 
 body {
   margin: 0;
-  font-family: 'Cairo', sans-serif;
-  background-color: var(--light-bg);
-  -webkit-font-smoothing: antialiased;
-  color: #1e293b;
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
+  background-color: var(--sand-beige);
+  color: #2d3436;
+  direction: rtl;
+  overflow: hidden; /* لمنع التمرير المزدوج في الشاشة الرئيسية */
 }
 
-/* تحسين السكرول بار ليصبح نحيفاً وأنيقاً */
+/* 2. تخصيص شريط التمرير (Scrollbar) */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -25,63 +27,82 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
-  border-radius: 20px;
+  background: #d1d5db;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: var(--olive-green);
 }
 
-/* تأثير Glassmorphism الخفيف للهيدر والسايدبار */
-aside, header {
-  backdrop-filter: blur(10px);
+/* 3. تأثيرات ظهور الرسائل */
+.message-enter {
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
-/* تنسيق الشعارات لتكون واضحة وكبيرة */
-aside img {
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
-  transition: transform 0.3s ease;
-}
-
-aside img:hover {
-  transform: scale(1.1);
-}
-
-/* أنيميشن متطور لظهور الرسائل */
-.message-appear {
-  animation: messageSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes messageSlideIn {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-/* تنسيق البطاقة الترحيبية لتكون "مودرن" */
-.welcome-card {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+/* 4. تنسيق حقل الإدخال والتركيز */
+input:focus {
+  outline: none;
 }
 
-/* تحسين شكل المدخلات (Input) */
-input::placeholder {
-  color: #94a3b8;
-  font-weight: 400;
+/* 5. تحسينات التجاوب (Media Queries) */
+
+/* للهواتف (أصغر من 1024px) */
+@media (max-width: 1023px) {
+  .sidebar-hidden {
+    transform: translateX(100%);
+  }
+  
+  /* تصغير حجم الفقاعات في الموبايل لتوفر مساحة */
+  .max-w-\[85\%\] {
+    max-width: 90% !important;
+  }
+
+  /* تعديل منطقة الإدخال لتناسب عرض الشاشة الصغير */
+  input {
+    font-size: 14px !important;
+  }
 }
 
-/* تأثير التدرج للردود */
-.bot-message-shadow {
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+/* 6. تأثيرات البطاقات (Suggestions Cards) */
+.suggestion-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.user-message-shadow {
-  box-shadow: 0 10px 15px -3px rgba(30, 86, 49, 0.2);
+.suggestion-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-color: var(--olive-green);
+}
+
+/* 7. تأثير زر الإرسال والاستجابة اللمسية */
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active {
+  transform: scale(0.92);
+}
+
+/* 8. القائمة الجانبية في الموبايل */
+.mobile-sidebar-transition {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* 9. تحسين مظهر النصوص الطويلة */
+p {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
